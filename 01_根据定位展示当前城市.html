@@ -27,8 +27,19 @@
     <div id="container"></div>
     <script>
         const map = new BMap.Map("container");
-        const point = new BMap.Point(116.404, 39.915);
-        map.centerAndZoom(point, 15);
+        const { label, value } = { "label": "上海", "value": "AREA|dbf46d32-7e76-1196" };
+
+        // 创建地址解析器实例
+        const myGeo = new BMap.Geocoder();
+        // 将地址解析结果显示在地图上，并调整地图视野    
+        myGeo.getPoint(label, point => {
+            if (point) {
+                map.centerAndZoom(point, 11);
+
+                map.addControl(new BMap.NavigationControl());
+                map.addControl(new BMap.ScaleControl());
+            }
+        }, label);
     </script>
 </body>
 

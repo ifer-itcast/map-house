@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%
+        }
+
+        body {
+            height: 100%;
+            margin: 0px;
+            padding: 0px
+        }
+
+        #container {
+            height: 100%
+        }
+
+        .bubble {
+            width: 70px;
+            height: 70px;
+            line-height: 1;
+            display: inline-block;
+            position: absolute;
+            border-radius: 100%;
+            background: rgba(12, 181, 106, 0.9);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .name {
+            padding: 20px 0 6px 0;
+        }
+    </style>
+    <script src="http://api.map.baidu.com/api?v=3.0&ak=U3AQxdP07acgc0jKMHw2Awb9PcH73y3d"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.20.0-0/axios.min.js"></script>
+</head>
+
+<body>
+    <div id="container"></div>
+    <script>
+        const map = new BMap.Map("container");
+        const { label, value } = { "label": "上海", "value": "AREA|dbf46d32-7e76-1196" };
+
+        // 创建地址解析器实例
+        const myGeo = new BMap.Geocoder();
+        // 将地址解析结果显示在地图上，并调整地图视野    
+        myGeo.getPoint(label, async point => {
+            if (point) {
+                map.centerAndZoom(point, 11);
+
+                map.addControl(new BMap.NavigationControl());
+                map.addControl(new BMap.ScaleControl());
+
+                const { data } = await axios.get(`http://localhost:8080/area/map?id=${value}`)
+                data.body.forEach(item => {
+                    const { coord: { longitude, latitude }, label: areaName, count, value } = item;
+                    // point => {lng: 121.48680103771713, lat: 31.24257042542815, Se: "inner"}
+                    const areaPoint = new BMap.Point(longitude, latitude);
+                    const opts = {
+                        position: areaPoint,
+                        offset: new BMap.Size(-35, -35)
+                    }
+                    const label = new BMap.Label("", opts);
+
+                    label.id = value;
+
+                    label.setContent(`
+                        <div class="bubble">
+                            <p class="name">${areaName}</p>
+                            <p>${count}套</p>
+                        </div>
+                    `);
+
+                    label.addEventListener('click', function () {
+                        // 放大地图
+                        map.centerAndZoom(areaPoint, 13);
+                        // 清除覆盖物信息
+                        map.clearOverlays();
+                    });
+                    map.addOverlay(label);
+                });
+            }
+        }, label);
+    </script>
+</body>
+
+</html>
