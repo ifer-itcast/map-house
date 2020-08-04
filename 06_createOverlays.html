@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%
+        }
+
+        body {
+            height: 100%;
+            margin: 0px;
+            padding: 0px
+        }
+
+        #container {
+            height: 100%
+        }
+
+        .bubble {
+            width: 70px;
+            height: 70px;
+            line-height: 1;
+            display: inline-block;
+            position: absolute;
+            border-radius: 100%;
+            background: rgba(12, 181, 106, 0.9);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .name {
+            padding: 20px 0 6px 0;
+        }
+    </style>
+    <script src="http://api.map.baidu.com/api?v=3.0&ak=U3AQxdP07acgc0jKMHw2Awb9PcH73y3d"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.20.0-0/axios.min.js"></script>
+</head>
+
+<body>
+    <div id="container"></div>
+    <script>
+        const map = new BMap.Map("container");
+        const { label, value } = { "label": "上海", "value": "AREA|dbf46d32-7e76-1196" };
+        const myGeo = new BMap.Geocoder()
+        myGeo.getPoint(label, async point => {
+            if (point) {
+                map.centerAndZoom(point, 11)
+                // 添加常用控件
+                map.addControl(new BMap.NavigationControl())
+                map.addControl(new BMap.ScaleControl())
+
+                // 调用 renderOverlays 方法
+                this.renderOverlays(value)
+            }
+        },label);
+
+        // 1. 获取所有区信息
+        async function renderOverlays(id) {
+            const { data } = await axios.get(`http://localhost:8080/area/map?id=${id}`);
+            const { nextZoom, type } = getTypeAndZoom();
+            data.body.forEach(item => {
+                // 2. 创建对应覆盖物
+                createOverlays(item, nextZoom, type);
+            });
+        }
+
+        function getTypeAndZoom() {
+            const zoom = map.getZoom();
+            let nextZoom, type;
+            if (zoom >= 10 && zoom < 12) {
+                // 展示区
+                type = 'circle';
+                nextZoom = 13;
+            } else if (zoom >= 12 && zoom < 14) {
+                // 展示镇
+                nextZoom = 15;
+                type = 'circle';
+            } else if (zoom >= 14 && zoom < 16) {
+                // 小区
+                type = 'rect';
+            }
+            return { type, nextZoom };
+        }
+
+        function createOverlays(data, zoom, type) {
+            const { coord: { longitude, latitude }, label: areaName, count, value } = data;
+            const areaPoint = new BMap.Point(longitude, latitude);
+            if (type === 'circle') {
+                // 区、镇
+                createCircle(areaPoint, areaName, count, value, zoom);
+            } else {
+                // 小区
+                createRect(areaPoint, areaName, count, value);
+            }
+        }
+
+        function createCircle(areaPoint, areaName, count, value) {
+
+        }
+        function createRect() { }
+
+
+
+
+    </script>
+</body>
+
+</html>

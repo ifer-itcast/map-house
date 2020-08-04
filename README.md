@@ -94,3 +94,12 @@ label.addEventListener('click', function() {
 
 5. 放大地图（级别为13），调用 clearOverlays() 方法清除当前覆盖物
 
+## 05_renderOverlays
+
+## 06_createOverlays
+
+## 07_createCircle
+
+## 08_createRect
+
+
